@@ -44,6 +44,11 @@ public class MotoModBatteryService extends Service {
         }
     };
 
+    public static final String SYS_CHARGING_ENABLED_FILE =
+            ( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q )
+                    ? "/sys/class/power_supply/battery/battery_charging_enabled"
+                    : "/sys/class/power_supply/battery/charging_enabled";
+
     @Override
     public IBinder onBind(Intent intent) {
         return mBinder;
@@ -81,13 +86,14 @@ public class MotoModBatteryService extends Service {
 
     private boolean set_charging_enabled(boolean enabled) {
         int _enabled = (enabled)?1:0;
+
         Process p;
         try {
             // Preform su to get root privileges
             p = Runtime.getRuntime().exec("su");
             DataOutputStream os = new DataOutputStream(p.getOutputStream());
             //battery_charging_enabled is not the one that controls charging
-            os.writeBytes(String.format("echo %d > /sys/class/power_supply/battery/charging_enabled\n",_enabled));
+            os.writeBytes(String.format("echo %d > %s\n",_enabled, SYS_CHARGING_ENABLED_FILE));
             os.writeBytes("exit\n");
             os.flush();
             try {
